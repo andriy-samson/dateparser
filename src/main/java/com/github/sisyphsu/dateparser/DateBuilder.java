@@ -65,10 +65,7 @@ public final class DateBuilder {
         if (!zoneOffsetSetted) {
             return toCalendar().getTime();
         }
-        LocalDateTime dateTime = toLocalDateTime();
-        long second = dateTime.toEpochSecond(DEFAULT_OFFSET);
-        long ns = dateTime.getNano();
-        return new Date(second * 1000 + ns / 1000000);
+        return Date.from(toOffsetDateTime().toInstant());
     }
 
     /**
@@ -134,7 +131,7 @@ public final class DateBuilder {
         LocalDateTime dateTime = LocalDateTime.of(year, month, day, hour, minute, second, ns);
         // with ZoneOffset
         if (zoneOffsetSetted) {
-            ZoneOffset offset = ZoneOffset.ofHoursMinutes(zoneOffset / 60, Math.abs(zoneOffset % 60));
+            ZoneOffset offset = ZoneOffset.ofHoursMinutes(zoneOffset / 60, zoneOffset % 60);
             return dateTime.atOffset(offset);
         }
         // with TimeZone
