@@ -269,11 +269,6 @@ public class DateParserTest {
             assert matchNoTz("yyyy-MM-dd HH:mm:ss Z", "2014-03-01 00:00:00 +0000", "2014.03");
             assert matchNoTz("yyyy-MM-dd HH:mm:ss Z", "2014-03-30 00:00:00 +0000", "2014.03.30");
 
-            // negative time zone offset with non-zero minutes
-            assert matchDate("yyyy-MM-dd HH:mm:ss Z", "2009-08-12 22:15:09 -0230", "2009-08-12T22:15:09-02:30");
-            assert matchDate("yyyy-MM-dd HH:mm:ss Z", "2009-08-12 22:15:09 -0345", "2009-08-12T22:15:09-03:45");
-            assert matchDate("yyyy-MM-dd HH:mm:ss Z", "2009-08-12 22:15:09 -0930", "2009-08-12T22:15:09-09:30");
-
             // test ZoneOffset
             assert matchDate("yyyy-MM-dd HH:mm:ss Z", "2014-03-30 00:00:00 -1400", "2014.03.30 00:00:00 -1400");
             assert matchStamp("yyyy-MM-dd HH:mm:ss Z", "2014-03-30 14:00:00 +0000", "2014.03.30 00:00:00 -1400");
