@@ -170,66 +170,49 @@ public class DateParserTest {
     @Test
     public void testParseDate() {
 
+        // force test time zone to avoid different test result if the test runs on different local time zones.
         final TimeZone backUpTimeZone = TimeZone.getDefault();
+
         try {
             TimeZone.setDefault(TimeZone.getTimeZone("America/New_York"));
 
             for (DateEntry entry : testEntries) {
-                if (entry.hasTimezone) {
-                    assert matchDate(entry.format, entry.datetime, entry.freeDatetime);
-                }
-                else {
-                    assert matchNoTz(entry.format, entry.datetime, entry.freeDatetime);
-                }
+                assert matchDate(entry);
             }
         }
         finally {
+            // restore time zone
             TimeZone.setDefault(backUpTimeZone);
         }
     }
 
     /**
      * Compare two dates with time zone parsed by java DateTimeFormatter and DateParser.parseDate(..).
-     * @param format a format for DateTimeFormatter as a base date to compare
-     * @param datetime expected date parsed with DateTimeFormatter
-     * @param freeDatetime date parsed by DateParser.parseDate(..)
-     * @return true if both parsed dates: <code>datetime</code> and <code>freeDatetime</code> are equal
+     * @param entry instance that contains date to parse and base reference date to compare the parsed result
+     * @return true if both parsed dates: <code>entry.datetime</code> and <code>entry.freeDatetime</code> are equal
      */
-    private boolean matchDate(String format, String datetime, String freeDatetime) {
-        DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern(format).toFormatter();
-        OffsetDateTime dt1 = OffsetDateTime.parse(datetime, formatter);
+    private boolean matchDate(DateEntry entry) {
+        DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern(entry.format).toFormatter();
+        OffsetDateTime dt1 = OffsetDateTime.parse(entry.datetime, formatter);
         Date d1 = Date.from(dt1.toInstant());
-        Date d2 = parser.parseDate(freeDatetime);
-        if (!d1.equals(d2)) {
-            System.out.print(String.format("\nNO MATCH: %s, %s, %s", format, datetime, freeDatetime));
-        }
-        return d1.equals(d2);
-    }
+        Date d2 = parser.parseDate(entry.freeDatetime);
+        boolean isEqual = false;
 
-    /**
-     * Compare two dates without time zone parsed by java DateTimeFormatter and DateParser.parseDate(..).
-     * Note: comparing to {@link #match(String, String, String)} this method removes time zone information
-     * from parsed <code>freeDatetime</code> when comparing to expected date
-     * @param format template format for <code>datetime</code>
-     * @param datetime expected date
-     * @param freeDatetime date string to compare with expected date
-     * @return true if parsed expected date is the same as parsed freeDatetime
-     */
-    private boolean matchNoTz(String format, String datetime, String freeDatetime) {
-        DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern(format).toFormatter();
-        OffsetDateTime dt1 = OffsetDateTime.parse(datetime, formatter);
-        // note: d1 is always in UTC
-        Date d1 = Date.from(dt1.toInstant());
-
-        // it is expected that parseDate(..) method uses a system default time zone if the time zone is not specified in parsed text
-        Date d2 = parser.parseDate(freeDatetime);
-        // remove local time zone offset, to compare result with expected UTC time
-        long offset = TimeZone.getDefault().getOffset(d2.getTime());
-        Date d3 = new Date(d2.getTime() + offset);
-        if (!d1.equals(d3)) {
-            System.out.print(String.format("\nNO MATCH: %s, %s, %s", format, datetime, freeDatetime));
+        if (entry.hasTimezone) {
+            isEqual = d1.equals(d2);
         }
-        return d1.equals(d3);
+        else {
+            // remove local time zone offset, to compare result with expected UTC time
+            long offset = TimeZone.getDefault().getOffset(d2.getTime());
+            Date d3 = new Date(d2.getTime() + offset);
+            isEqual = d1.equals(d3);
+        }
+
+        if (!isEqual) {
+            System.out.print(String.format("\nNO MATCH: %s, %s, %s", entry.format, entry.datetime, entry.freeDatetime));
+        }
+
+        return isEqual;
     }
 
     private boolean match(String format, String datetime, String freeDatetime) {
